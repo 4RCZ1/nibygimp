@@ -7,9 +7,7 @@
 
 PPM::PPM() = default;
 
-PPM::PPM(int width, int height) : m_width(width), m_height(height) {
-    m_pixels.resize(width * height, QColor());
-}
+PPM::PPM(int width, int height) : Image(width, height) {}
 
 bool PPM::load(const QString& filePath) {
     QFile file(filePath);
@@ -53,11 +51,31 @@ bool PPM::load(const QString& filePath) {
     // Read pixel data
     for (int y = 0; y < m_height; ++y) {
         for (int x = 0; x < m_width; ++x) {
-            QString _line = in.readLine();
-            QStringList values = _line.split(" ", Qt::SkipEmptyParts);
-            int r = values[0].toInt();
-            int g = values[1].toInt();
-            int b = values[2].toInt();
+            int i = 3;
+            int r, g, b;
+            while (i> 0) {
+                QString _line = in.readLine();
+                QStringList values = _line.split(" ", Qt::SkipEmptyParts);
+                for (const QString& value : values) {
+                    bool ok;
+                    const int val = value.toInt(&ok);
+                    if (ok) {
+                        switch (i) {
+                        case 3:
+                            r = val;
+                            break;
+                        case 2:
+                            g = val;
+                            break;
+                        case 1:
+                            b = val;
+                            break;
+                        default:;
+                        }
+                        i--;
+                    }
+                }
+            }
 
             // Scale values if maxValue is not 255
             if (maxValue != 255) {
@@ -101,30 +119,4 @@ bool PPM::save(const QString& filePath) const {
 
     file.close();
     return true;
-}
-
-QColor PPM::pixelAt(int x, int y) const {
-    if (x < 0 || x >= m_width || y < 0 || y >= m_height) {
-        return QColor(0, 0, 0);
-    }
-    return m_pixels[y * m_width + x];
-}
-
-void PPM::setPixel(int x, int y, const QColor& color) {
-    if (x < 0 || x >= m_width || y < 0 || y >= m_height) {
-        return;
-    }
-    m_pixels[y * m_width + x] = color;
-}
-
-QImage PPM::toQImage() const {
-    QImage image(m_width, m_height, QImage::Format_RGB32);
-    
-    for (int y = 0; y < m_height; ++y) {
-        for (int x = 0; x < m_width; ++x) {
-            image.setPixelColor(x, y, pixelAt(x, y));
-        }
-    }
-    
-    return image;
 }

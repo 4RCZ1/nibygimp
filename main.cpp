@@ -13,20 +13,23 @@ int main(int argc, char *argv[]) {
 
     // Create a main widget to hold our layout (stack-allocated)
     QWidget window;
-    window.setWindowTitle("FakeGIMP");
+    window.setWindowTitle("Fake GIMP");
 
     // Create a layout - the window takes ownership when setLayout is called
     auto *layout = new QVBoxLayout(&window);
 
     // Create buttons - the layout takes ownership
-    auto *button2 = new QPushButton("Select a file");
+    auto *selectButton = new QPushButton("Select a file");
+    auto *saveButton = new QPushButton("Save image");
 
     auto *imageLabel = new QLabel();
     imageLabel->setAlignment(Qt::AlignCenter);
     imageLabel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
+    std::unique_ptr<Image> image;
+
     // Connect the second button to show a file dialog
-    QObject::connect(button2, &QPushButton::clicked, &window, [&window, imageLabel]() {
+    QObject::connect(selectButton, &QPushButton::clicked, &window, [&window, imageLabel, &image]() {
         QString fileName = QFileDialog::getOpenFileName(
             &window,
             "Open File",
@@ -37,10 +40,17 @@ int main(int argc, char *argv[]) {
         if (!fileName.isEmpty()) {
             qDebug() << "Selected file:" << fileName;
 
-            PPM image;
-            if (image.load(fileName)) {
-                qDebug() << "Loaded image:" << image.width() << "x" << image.height();
-                QImage qImage = image.toQImage();
+            QFileInfo fileInfo(fileName);
+            if (fileInfo.suffix().toLower() == "ppm") {
+                image = std::make_unique<PPM>(0, 0);
+            } else {
+                qDebug() << "Nieznany format obrazu";
+                return;
+            }
+
+            if (image->load(fileName)) {
+                qDebug() << "Loaded image:" << image->width() << "x" << image->height();
+                QImage qImage = image->toQImage();
                 QPixmap pixmap = QPixmap::fromImage(qImage);
                 QPixmap scaledPixmap = pixmap.scaled(
                     qImage.width() * 100,
@@ -55,8 +65,35 @@ int main(int argc, char *argv[]) {
         }
     });
 
+    QObject::connect(saveButton, &QPushButton::clicked, &window, [&window, &image]() {
+        if (!image) {
+                qDebug() << "No image to save";
+                return;
+            }
+
+            QString fileName = QFileDialog::getSaveFileName(
+                &window,
+                "Save File",
+                QString(),
+                "PPM Files (*.ppm)"
+            );
+
+            if (!fileName.isEmpty()) {
+                if (!fileName.endsWith(".ppm", Qt::CaseInsensitive)) {
+                    fileName += ".ppm";
+                }
+
+                if (image->save(fileName)) {
+                    qDebug() << "Image saved successfully to" << fileName;
+                } else {
+                    qDebug() << "Failed to save image";
+                }
+            }
+    });
+
     // Add buttons to layout
-    layout->addWidget(button2);
+    layout->addWidget(saveButton);
+    layout->addWidget(selectButton);
     layout->addWidget(imageLabel);
 
     // Set the layout on the window
