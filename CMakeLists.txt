@@ -14,10 +14,14 @@ find_package(Qt6 COMPONENTS
   REQUIRED)
 
 add_executable(nibygimp main.cpp
-        PPM.cpp
-        PPM.h
-        Image.cpp
-        Image.h)
+        src/image/PPM.cpp
+        src/image/PPM.h
+        src/image/Image.cpp
+        src/image/Image.h
+        src/files/FileManager.cpp
+        src/files/FileManager.h
+        src/tools/Greyscale.cpp
+        src/tools/Greyscale.h)
 target_link_libraries(nibygimp
   Qt::Core
   Qt::Gui

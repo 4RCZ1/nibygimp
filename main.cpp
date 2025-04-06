@@ -1,105 +1,57 @@
+#include <QAction>
 #include <QApplication>
+#include <QDebug>
+#include <QFileDialog>
+#include <QMainWindow>
+#include <QMenu>
+#include <QMenuBar>
 #include <QPushButton>
 #include <QVBoxLayout>
 #include <QWidget>
-#include <QDebug>
-#include <QFileDialog>
-#include <QLabel>
 
-#include "PPM.h"
+#include "src/files/FileManager.h"
+#include "src/image/Image.h"
+#include "src/image/PPM.h"
 
 int main(int argc, char *argv[]) {
-    QApplication a(argc, argv);
+  QApplication a(argc, argv);
 
-    // Create a main widget to hold our layout (stack-allocated)
-    QWidget window;
-    window.setWindowTitle("Fake GIMP");
+  QMainWindow window;
+  window.setWindowTitle("Fake GIMP");
+  auto fileManager = new FileManager(&window);
+  auto *centralWidget = new QWidget(&window);
 
-    // Create a layout - the window takes ownership when setLayout is called
-    auto *layout = new QVBoxLayout(&window);
+  auto *layout = new QVBoxLayout(centralWidget);
 
-    // Create buttons - the layout takes ownership
-    auto *selectButton = new QPushButton("Select a file");
-    auto *saveButton = new QPushButton("Save image");
+  auto *imageLabel = new QLabel();
+  imageLabel->setAlignment(Qt::AlignCenter);
+  imageLabel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
-    auto *imageLabel = new QLabel();
-    imageLabel->setAlignment(Qt::AlignCenter);
-    imageLabel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+  std::unique_ptr<Image> image;
 
-    std::unique_ptr<Image> image;
+  layout->addWidget(imageLabel);
 
-    // Connect the second button to show a file dialog
-    QObject::connect(selectButton, &QPushButton::clicked, &window, [&window, imageLabel, &image]() {
-        QString fileName = QFileDialog::getOpenFileName(
-            &window,
-            "Open File",
-            QString(),  // Default directory
-            "PPM Files (*.ppm);;All Files (*.*)"
-        );
+  centralWidget->setLayout(layout);
+  window.setCentralWidget(centralWidget);
 
-        if (!fileName.isEmpty()) {
-            qDebug() << "Selected file:" << fileName;
+  QMenuBar *menuBar = window.menuBar();
+  QMenu *fileMenu = menuBar->addMenu("File");
+  QMenu *toolsMenu = menuBar->addMenu("Tools");
 
-            QFileInfo fileInfo(fileName);
-            if (fileInfo.suffix().toLower() == "ppm") {
-                image = std::make_unique<PPM>(0, 0);
-            } else {
-                qDebug() << "Nieznany format obrazu";
-                return;
-            }
+  QAction *openAction = fileMenu->addAction("Open");
+  QObject::connect(openAction, &QAction::triggered, &window,
+                   [&window, imageLabel, &image, fileManager]() {
+                     fileManager->openFile(imageLabel, image);
+                   });
 
-            if (image->load(fileName)) {
-                qDebug() << "Loaded image:" << image->width() << "x" << image->height();
-                QImage qImage = image->toQImage();
-                QPixmap pixmap = QPixmap::fromImage(qImage);
-                QPixmap scaledPixmap = pixmap.scaled(
-                    qImage.width() * 100,
-                    qImage.height() * 100,
-                    Qt::KeepAspectRatio,
-                    Qt::FastTransformation);
+  QAction *saveAction = fileMenu->addAction("Save");
+  QObject::connect(
+      saveAction, &QAction::triggered, &window,
+      [&window, &image, fileManager]() { fileManager->saveFile(image); });
+  fileMenu->addSeparator();
 
-                imageLabel->setPixmap(scaledPixmap);
-            } else {
-                qDebug() << "Failed to load image";
-            }
-        }
-    });
+  window.resize(800, 600);
+  window.show();
 
-    QObject::connect(saveButton, &QPushButton::clicked, &window, [&window, &image]() {
-        if (!image) {
-                qDebug() << "No image to save";
-                return;
-            }
-
-            QString fileName = QFileDialog::getSaveFileName(
-                &window,
-                "Save File",
-                QString(),
-                "PPM Files (*.ppm)"
-            );
-
-            if (!fileName.isEmpty()) {
-                if (!fileName.endsWith(".ppm", Qt::CaseInsensitive)) {
-                    fileName += ".ppm";
-                }
-
-                if (image->save(fileName)) {
-                    qDebug() << "Image saved successfully to" << fileName;
-                } else {
-                    qDebug() << "Failed to save image";
-                }
-            }
-    });
-
-    // Add buttons to layout
-    layout->addWidget(saveButton);
-    layout->addWidget(selectButton);
-    layout->addWidget(imageLabel);
-
-    // Set the layout on the window
-    window.setLayout(layout);
-    window.resize(800, 600);
-    window.show();
-
-    return QApplication::exec();
+  return QApplication::exec();
 }

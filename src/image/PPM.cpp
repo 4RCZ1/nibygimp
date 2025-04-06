@@ -1,9 +1,9 @@
 // Image.cpp
 #include "PPM.h"
-#include <QFile>
-#include <QTextStream>
 #include <QDebug>
+#include <QFile>
 #include <QImage>
+#include <QTextStream>
 
 PPM::PPM() = default;
 
@@ -41,10 +41,10 @@ bool PPM::load(const QString& filePath) {
 
     m_width = dimensions[0].toInt();
     m_height = dimensions[1].toInt();
-    
+
     // Read max value
     int maxValue = in.readLine().toInt();
-    
+
     // Resize pixel storage
     m_pixels.resize(m_width * m_height);
 

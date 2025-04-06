@@ -11,6 +11,22 @@ QColor Image::pixelAt(int x, int y) const {
   return m_pixels[y * m_width + x];
 }
 
+int Image::getPixelR(int x, int y) const {
+  return pixelAt(x, y).red();
+}
+
+int Image::getPixelG(int x, int y) const {
+  return pixelAt(x, y).green();
+}
+
+int Image::getPixelB(int x, int y) const {
+  return pixelAt(x, y).blue();
+}
+
+void Image::setPixel(int x, int y, int r, int g, int b) {
+  setPixel(x, y, QColor(r, g, b));
+}
+
 void Image::setPixel(int x, int y, const QColor& color) {
   if (x < 0 || x >= m_width || y < 0 || y >= m_height) {
     return;

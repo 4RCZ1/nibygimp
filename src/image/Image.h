@@ -20,6 +20,10 @@ public:
     virtual bool save(const QString& filePath) const = 0;
 
     QColor pixelAt(int x, int y) const;
+    int getPixelR(int x, int y) const;
+    int getPixelG(int x, int y) const;
+    int getPixelB(int x, int y) const;
+    void setPixel(int x, int y, int r, int g, int b);
     void setPixel(int x, int y, const QColor& color);
 
     QImage toQImage() const;
