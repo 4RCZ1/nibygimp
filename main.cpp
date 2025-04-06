@@ -8,10 +8,14 @@
 #include <QPushButton>
 #include <QVBoxLayout>
 #include <QWidget>
+#include <QInputDialog>
+#include <QMessageBox>
+#include <QLabel>
 
 #include "src/files/FileManager.h"
 #include "src/image/Image.h"
 #include "src/image/PPM.h"
+#include "src/tools/Greyscale.h" // Dodany include
 
 int main(int argc, char *argv[]) {
   QApplication a(argc, argv);
@@ -49,6 +53,75 @@ int main(int argc, char *argv[]) {
       saveAction, &QAction::triggered, &window,
       [&window, &image, fileManager]() { fileManager->saveFile(image); });
   fileMenu->addSeparator();
+
+  // Funkcja pomocnicza do aktualizacji widoku
+  auto updateImageView = [&image, imageLabel]() {
+    if (image) {
+      imageLabel->setPixmap(QPixmap::fromImage(image->toQImage()));
+    }
+  };
+
+  // Dodanie akcji dla konwersji na skalę szarości
+  QAction *grayscaleAction = toolsMenu->addAction("Convert to Grayscale");
+  QObject::connect(grayscaleAction, &QAction::triggered, &window, [&image, updateImageView]() {
+    if (image) {
+      Greyscale::convertToGreyscale(image);
+      updateImageView();
+    } else {
+      QMessageBox::warning(nullptr, "Error", "No image loaded.");
+    }
+  });
+
+  // Dodanie akcji dla regulacji jasności
+  QAction *brightnessAction = toolsMenu->addAction("Adjust Brightness");
+  QObject::connect(brightnessAction, &QAction::triggered, &window, [&image, updateImageView, &window]() {
+    if (image) {
+      bool ok;
+      int value = QInputDialog::getInt(&window, "Adjust Brightness",
+                                      "Brightness (-255 to 255):",
+                                      0, -255, 255, 1, &ok);
+      if (ok) {
+        Greyscale::adjustBrightness(image, value);
+        updateImageView();
+      }
+    } else {
+      QMessageBox::warning(nullptr, "Error", "No image loaded.");
+    }
+  });
+
+  // Dodanie akcji dla regulacji kontrastu
+  QAction *contrastAction = toolsMenu->addAction("Adjust Contrast");
+  QObject::connect(contrastAction, &QAction::triggered, &window, [&image, updateImageView, &window]() {
+    if (image) {
+      bool ok;
+      double factor = QInputDialog::getDouble(&window, "Adjust Contrast",
+                                          "Contrast factor (0.1 to 3.0):",
+                                          1.0, 0.1, 3.0, 2, &ok);
+      if (ok) {
+        Greyscale::adjustContrast(image, static_cast<float>(factor));
+        updateImageView();
+      }
+    } else {
+      QMessageBox::warning(nullptr, "Error", "No image loaded.");
+    }
+  });
+
+  // Dodanie akcji dla regulacji gamma
+  QAction *gammaAction = toolsMenu->addAction("Adjust Gamma");
+  QObject::connect(gammaAction, &QAction::triggered, &window, [&image, updateImageView, &window]() {
+    if (image) {
+      bool ok;
+      double gamma = QInputDialog::getDouble(&window, "Adjust Gamma",
+                                         "Gamma value (0.1 to 5.0):",
+                                         1.0, 0.1, 5.0, 2, &ok);
+      if (ok) {
+        Greyscale::adjustGamma(image, static_cast<float>(gamma));
+        updateImageView();
+      }
+    } else {
+      QMessageBox::warning(nullptr, "Error", "No image loaded.");
+    }
+  });
 
   window.resize(800, 600);
   window.show();

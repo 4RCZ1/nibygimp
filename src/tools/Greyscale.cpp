@@ -8,15 +8,12 @@ void Greyscale::convertToGreyscale(std::unique_ptr<Image>& image) {
     
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
-            // Pobranie składowych RGB
             int r = image->getPixelR(x, y);
             int g = image->getPixelG(x, y);
             int b = image->getPixelB(x, y);
             
-            // Konwersja do skali szarości (formuła luminancji)
-            int gray = static_cast<int>(0.299 * r + 0.587 * g + 0.114 * b);
+            int gray = static_cast<int>(0.3 * r + 0.6 * g + 0.1 * b);
             
-            // Ustawienie tej samej wartości dla wszystkich kanałów
             image->setPixel(x, y, gray, gray, gray);
         }
     }
