@@ -21,7 +21,11 @@ add_executable(nibygimp main.cpp
         src/files/FileManager.cpp
         src/files/FileManager.h
         src/tools/Greyscale.cpp
-        src/tools/Greyscale.h)
+        src/tools/Greyscale.h
+        src/tools/Histogram.cpp
+        src/tools/Histogram.h
+        src/tools/HistogramDisplay.cpp
+        src/tools/HistogramDisplay.h)
 target_link_libraries(nibygimp
   Qt::Core
   Qt::Gui
