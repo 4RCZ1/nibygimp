@@ -6,12 +6,18 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(CMAKE_PREFIX_PATH "C:\\Qt\\6.8.2\\mingw_64")
-find_package(Qt6 COMPONENTS
-  Core
-  Gui
-  Widgets
-  REQUIRED)
+if(NOT DEFINED CMAKE_PREFIX_PATH)
+    find_package(Qt6 COMPONENTS Core Gui Widgets QUIET)
+    if(NOT Qt6_FOUND)
+        message(STATUS "QT NOT FOUND. Using predefined path.")
+        set(CMAKE_PREFIX_PATH "C:\\Qt\\6.8.2\\mingw_64" CACHE PATH "QT path")
+    else ()
+        message(STATUS "Found Qt6 in: ${Qt6_DIR}")
+        set(CMAKE_PREFIX_PATH ${Qt6_DIR} CACHE PATH "QT path")
+    endif()
+endif()
+
+find_package(Qt6 COMPONENTS Core Gui Widgets REQUIRED)
 
 add_executable(nibygimp main.cpp
         src/image/PPM.cpp
