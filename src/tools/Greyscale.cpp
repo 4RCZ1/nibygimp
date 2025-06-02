@@ -45,13 +45,19 @@ std::array<int, 256> Greyscale::createBrightnessLUT(float value) {
 }
 
 std::array<int, 256> Greyscale::createContrastLUT(float factor) {
-  // funkcja sigmoidalna
   std::array<int, 256> lut;
 
   for (int i = 0; i < 256; ++i) {
-    // Wzór: nowa_wartość = (stara_wartość - 128) * factor + 128
-    float newValue = (i - 128.0f) * factor + 128.0f;
-    lut[i] = std::clamp(static_cast<int>(newValue), 0, 255);
+    float x = i / 255.0f;  // Normalize to [0,1]
+
+    // Modified sigmoid that guarantees f(0) = 0 and f(1) = 1
+    // Modified sigmoid that guarantees f(0) = 0 and f(1) = 1
+    float numerator = std::exp(factor * (x - 0.5f)) - std::exp(-factor * 0.5f);
+    float denominator = std::exp(factor * 0.5f) - std::exp(-factor * 0.5f);
+
+    float result = numerator / denominator;
+
+    lut[i] = std::clamp(static_cast<int>(result * 255.0f), 0, 255);
   }
 
   return lut;

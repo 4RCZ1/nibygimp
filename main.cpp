@@ -97,8 +97,8 @@ int main(int argc, char *argv[]) {
     if (image) {
       bool ok;
       double factor = QInputDialog::getDouble(&window, "Adjust Contrast",
-                                          "Contrast factor (0.1 to 3.0):",
-                                          1.0, 0.1, 3.0, 2, &ok);
+                                          "Contrast factor (-10 to 10):",
+                                          1.0, -10.0, 10.0, 2, &ok);
       if (ok) {
         Greyscale::adjustContrast(image, static_cast<float>(factor));
         updateImageView();
