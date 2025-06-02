@@ -79,9 +79,9 @@ int main(int argc, char *argv[]) {
   QObject::connect(brightnessAction, &QAction::triggered, &window, [&image, updateImageView, &window]() {
     if (image) {
       bool ok;
-      int value = QInputDialog::getInt(&window, "Adjust Brightness",
-                                      "Brightness (-255 to 255):",
-                                      0, -255, 255, 1, &ok);
+      double value = QInputDialog::getDouble(&window, "Adjust Brightness",
+                                      "Brightness (0 to 2):",
+                                      1, 0, 2, 1, &ok);
       if (ok) {
         Greyscale::adjustBrightness(image, value);
         updateImageView();
