@@ -18,6 +18,7 @@
 #include "src/tools/Greyscale.h" // Dodany include
 #include "src/tools/Histogram.h" // Dodany include dla histogramu
 #include "src/tools/HistogramDisplay.h" // Dodany include dla wyświetlania histogramu
+#include "src/tools/Blur.h" // Dodany include dla rozmycia
 
 int main(int argc, char *argv[]) {
   QApplication a(argc, argv);
@@ -163,6 +164,48 @@ int main(int argc, char *argv[]) {
       Histogram::equalizeHistogram(image);
       updateImageView();
       QMessageBox::information(nullptr, "Histogram", "Histogram został wyrównany.");
+    } else {
+      QMessageBox::warning(nullptr, "Error", "No image loaded.");
+    }
+  });
+
+  // Dodanie separatora dla sekcji rozmycia
+  toolsMenu->addSeparator();
+  
+  // Dodanie menu dla funkcji rozmycia
+  QMenu *blurMenu = toolsMenu->addMenu("Blur");
+  
+  // Akcja rozmycia Gaussa z wyborem parametrów
+  QAction *gaussianBlurAction = blurMenu->addAction("Gaussian Blur");
+  QObject::connect(gaussianBlurAction, &QAction::triggered, &window, [&image, updateImageView, &window]() {
+    if (image) {
+      bool ok;
+      double sigma = QInputDialog::getDouble(&window, "Gaussian Blur",
+                                           "Sigma value (0.5 to 10.0):",
+                                           1.0, 0.5, 10.0, 2, &ok);
+      if (ok) {
+        Blur::gaussianBlur(image, sigma);
+        updateImageView();
+        QMessageBox::information(nullptr, "Blur", "Rozmycie Gaussa zostało zastosowane.");
+      }
+    } else {
+      QMessageBox::warning(nullptr, "Error", "No image loaded.");
+    }
+  });
+  
+  // Akcja rozmycia równomiernego z wyborem parametrów
+  QAction *uniformBlurAction = blurMenu->addAction("Uniform Blur");
+  QObject::connect(uniformBlurAction, &QAction::triggered, &window, [&image, updateImageView, &window]() {
+    if (image) {
+      bool ok;
+      int kernelSize = QInputDialog::getInt(&window, "Uniform Blur",
+                                          "Kernel size (3 to 15):",
+                                          5, 3, 15, 2, &ok);
+      if (ok) {
+        Blur::uniformBlur(image, kernelSize);
+        updateImageView();
+        QMessageBox::information(nullptr, "Blur", "Rozmycie równomierne zostało zastosowane.");
+      }
     } else {
       QMessageBox::warning(nullptr, "Error", "No image loaded.");
     }

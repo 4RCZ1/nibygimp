@@ -31,7 +31,9 @@ add_executable(nibygimp main.cpp
         src/tools/Histogram.cpp
         src/tools/Histogram.h
         src/tools/HistogramDisplay.cpp
-        src/tools/HistogramDisplay.h)
+        src/tools/HistogramDisplay.h
+        src/tools/Blur.cpp
+        src/tools/Blur.h)
 target_link_libraries(nibygimp
   Qt::Core
   Qt::Gui
