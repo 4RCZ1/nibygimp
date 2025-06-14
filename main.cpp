@@ -80,8 +80,8 @@ int main(int argc, char *argv[]) {
     if (image) {
       bool ok;
       double value = QInputDialog::getDouble(&window, "Adjust Brightness",
-                                      "Brightness (0 to 2):",
-                                      1, 0, 2, 1, &ok);
+                                      "Brightness (-10 to 10):",
+                                      1.0, -10.0, 10.0, 2, &ok);
       if (ok) {
         Greyscale::adjustBrightness(image, value);
         updateImageView();

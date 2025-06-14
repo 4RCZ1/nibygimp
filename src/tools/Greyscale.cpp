@@ -34,11 +34,16 @@ void Greyscale::adjustGamma(std::unique_ptr<Image> &image, float gamma) {
 
 std::array<int, 256> Greyscale::createBrightnessLUT(float value) {
   std::array<int, 256> lut;
-  qDebug() << "brightness value:" << value;
   for (int i = 0; i < 256; ++i) {
-    double lutValue = std::pow(i / 255.0, value);
-    qDebug() << "LUT Value for" << i << ":" << lutValue;
-    lut[i] = std::clamp(static_cast<int>(lutValue * 255), 0, 255);
+    float x = i / 255.0f;  // Normalize to [0,1]
+
+    float numerator = std::exp(value * (x - 0.5f)) - std::exp(-value * 0.5f);
+    float denominator = std::exp(value * 0.5f) - std::exp(-value * 0.5f);
+
+    float result = numerator / denominator;
+
+    // ostatecznie zawsze normalizuje tak, aby wynik był w zakresie [0, 1], więc nie da sie zmniejszyć kontrastu
+    lut[i] = std::clamp(static_cast<int>(result * 255.0f), 0, 255);
   }
 
   return lut;
@@ -46,18 +51,24 @@ std::array<int, 256> Greyscale::createBrightnessLUT(float value) {
 
 std::array<int, 256> Greyscale::createContrastLUT(float factor) {
   std::array<int, 256> lut;
+  float midpoint = 0.5f;
+  float steepness = factor * 5.0f;
+
+  // Oblicz offset i scale dla normalizacji
+  float offset = 1.0f / (1.0f + std::exp(steepness * midpoint));
+  float scale = 1.0f / (1.0f / (1.0f + std::exp(-steepness * (1.0f - midpoint))) - offset);
 
   for (int i = 0; i < 256; ++i) {
-    float x = i / 255.0f;  // Normalize to [0,1]
+    float x = i / 255.0f; // Normalize to [0,1]
 
-    // Modified sigmoid that guarantees f(0) = 0 and f(1) = 1
-    // Modified sigmoid that guarantees f(0) = 0 and f(1) = 1
-    float numerator = std::exp(factor * (x - 0.5f)) - std::exp(-factor * 0.5f);
-    float denominator = std::exp(factor * 0.5f) - std::exp(-factor * 0.5f);
-
-    float result = numerator / denominator;
-
-    lut[i] = std::clamp(static_cast<int>(result * 255.0f), 0, 255);
+    // Sigmoida i normalizacja (tylko gdy podnosimy kontrast)
+    float sigmoid = 1.0f / (1.0f + std::exp(-steepness * (x - midpoint)));
+    float result = (sigmoid - offset) * scale;
+    if (factor > -1.0f && factor < 1.0f) {
+      lut[i] = static_cast<int>(sigmoid * 255.0f);
+    } else {
+      lut[i] = std::clamp(static_cast<int>(result * 255.0f), 0, 255);
+    }
   }
 
   return lut;
