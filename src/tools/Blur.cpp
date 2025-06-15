@@ -45,6 +45,28 @@ void Blur::uniformBlur(std::unique_ptr<Image>& image, int kernelSize) {
     applyConvolution(image, kernel);
 }
 
+void Blur::customMatrixBlur(std::unique_ptr<Image>& image, const std::vector<std::vector<double>>& matrix) {
+    if (!image || matrix.empty() || matrix[0].empty()) {
+        return;
+    }
+    
+    // Sprawdzenie czy macierz jest kwadratowa
+    size_t size = matrix.size();
+    for (const auto& row : matrix) {
+        if (row.size() != size) {
+            return; // Macierz nie jest kwadratowa
+        }
+    }
+    
+    // Sprawdzenie czy rozmiar jest nieparzysty (wymagane dla konwolucji)
+    if (size % 2 == 0) {
+        return; // Rozmiar musi być nieparzysty
+    }
+    
+    // Aplikowanie konwolucji z niestandardową macierzą
+    applyConvolution(image, matrix);
+}
+
 std::vector<std::vector<double>> Blur::generateGaussianKernel(double sigma, int size) {
     std::vector<std::vector<double>> kernel(size, std::vector<double>(size));
     double sum = 0.0;

@@ -13,6 +13,9 @@ public:
     
     // Funkcja dla rozmycia równomiernego (box blur)
     static void uniformBlur(std::unique_ptr<Image>& image, int kernelSize);
+    
+    // Funkcja dla niestandardowego rozmycia z zadaną macierzą
+    static void customMatrixBlur(std::unique_ptr<Image>& image, const std::vector<std::vector<double>>& matrix);
 
 private:
     // Generowanie jądra Gaussa

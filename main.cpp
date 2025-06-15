@@ -19,6 +19,7 @@
 #include "src/tools/Histogram.h" // Dodany include dla histogramu
 #include "src/tools/HistogramDisplay.h" // Dodany include dla wyświetlania histogramu
 #include "src/tools/Blur.h" // Dodany include dla rozmycia
+#include "src/tools/CustomBlurDialog.h" // Dodany include dla niestandardowego rozmycia
 
 int main(int argc, char *argv[]) {
   QApplication a(argc, argv);
@@ -205,6 +206,22 @@ int main(int argc, char *argv[]) {
         Blur::uniformBlur(image, kernelSize);
         updateImageView();
         QMessageBox::information(nullptr, "Blur", "Rozmycie równomierne zostało zastosowane.");
+      }
+    } else {
+      QMessageBox::warning(nullptr, "Error", "No image loaded.");
+    }
+  });
+  
+  // Akcja niestandardowego rozmycia z macierzą 3x3
+  QAction *customBlurAction = blurMenu->addAction("Custom Matrix Blur");
+  QObject::connect(customBlurAction, &QAction::triggered, &window, [&image, updateImageView, &window]() {
+    if (image) {
+      CustomBlurDialog dialog(&window);
+      if (dialog.exec() == QDialog::Accepted) {
+        auto matrix = dialog.getMatrix();
+        Blur::customMatrixBlur(image, matrix);
+        updateImageView();
+        QMessageBox::information(nullptr, "Blur", "Niestandardowe rozmycie zostało zastosowane.");
       }
     } else {
       QMessageBox::warning(nullptr, "Error", "No image loaded.");

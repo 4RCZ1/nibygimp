@@ -33,7 +33,11 @@ add_executable(nibygimp main.cpp
         src/tools/HistogramDisplay.cpp
         src/tools/HistogramDisplay.h
         src/tools/Blur.cpp
-        src/tools/Blur.h)
+        src/tools/Blur.h
+        src/tools/MatrixMaskWidget.cpp
+        src/tools/MatrixMaskWidget.h
+        src/tools/CustomBlurDialog.cpp
+        src/tools/CustomBlurDialog.h)
 target_link_libraries(nibygimp
   Qt::Core
   Qt::Gui
