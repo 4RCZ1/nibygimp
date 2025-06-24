@@ -21,6 +21,7 @@
 #include "src/tools/Blur.h" // Dodany include dla rozmycia
 #include "src/tools/CustomBlurDialog.h" // Dodany include dla niestandardowego rozmycia
 #include "src/tools/EdgeDetection.h" // Dodany include dla wykrywania krawędzi
+#include "src/tools/Binarization.h" // Dodany include dla binaryzacji
 
 int main(int argc, char *argv[]) {
   QApplication a(argc, argv);
@@ -388,6 +389,30 @@ int main(int argc, char *argv[]) {
           updateImageView();
           QMessageBox::information(nullptr, "Edge Detection", "Algorytm Canny został zastosowany.");
         }
+      }
+    } else {
+      QMessageBox::warning(nullptr, "Error", "No image loaded.");
+    }
+  });
+
+  // Dodanie separatora dla sekcji binaryzacji
+  toolsMenu->addSeparator();
+
+  // Dodanie menu dla funkcji binaryzacji
+  QMenu *binarizationMenu = toolsMenu->addMenu("Binarization");
+
+  // Akcja binaryzacji z progiem
+  QAction *thresholdBinarizationAction = binarizationMenu->addAction("Threshold Binarization");
+  QObject::connect(thresholdBinarizationAction, &QAction::triggered, &window, [&image, updateImageView, &window]() {
+    if (image) {
+      bool ok;
+      int threshold = QInputDialog::getInt(&window, "Threshold Binarization",
+                                         "Threshold value (0 to 255):",
+                                         128, 0, 255, 1, &ok);
+      if (ok) {
+        Binarization::thresholdBinarization(image, threshold);
+        updateImageView();
+        QMessageBox::information(nullptr, "Binarization", "Binaryzacja z progiem została zastosowana.");
       }
     } else {
       QMessageBox::warning(nullptr, "Error", "No image loaded.");

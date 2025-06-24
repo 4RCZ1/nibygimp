@@ -41,7 +41,9 @@ add_executable(nibygimp main.cpp
         src/tools/EdgeDetection.cpp
         src/tools/EdgeDetection.h
         src/tools/Canny.cpp
-        src/tools/Canny.h)
+        src/tools/Canny.h
+        src/tools/Binarization.cpp
+        src/tools/Binarization.h)
 target_link_libraries(nibygimp
   Qt::Core
   Qt::Gui
