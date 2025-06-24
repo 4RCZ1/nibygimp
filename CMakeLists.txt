@@ -37,7 +37,9 @@ add_executable(nibygimp main.cpp
         src/tools/MatrixMaskWidget.cpp
         src/tools/MatrixMaskWidget.h
         src/tools/CustomBlurDialog.cpp
-        src/tools/CustomBlurDialog.h)
+        src/tools/CustomBlurDialog.h
+        src/tools/EdgeDetection.cpp
+        src/tools/EdgeDetection.h)
 target_link_libraries(nibygimp
   Qt::Core
   Qt::Gui

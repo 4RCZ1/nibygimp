@@ -3,6 +3,10 @@
 #include <QMessageBox>
 #include <cmath>
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 MatrixMaskWidget::MatrixMaskWidget(int size, QWidget *parent)
     : QWidget(parent), m_size(size) {
     setupUI();
@@ -65,20 +69,19 @@ void MatrixMaskWidget::setupUI() {
     row2Layout->addWidget(m_gaussianBtn);
     row2Layout->addWidget(m_boxBtn);
     row2Layout->addWidget(m_edgeBtn);
-    
-    // Third row of buttons (more presets)
+      // Third row of buttons (more presets)
     QHBoxLayout* row3Layout = new QHBoxLayout();
     m_sharpenBtn = new QPushButton("Sharpen");
     m_embossBtn = new QPushButton("Emboss");
+    m_laplacianBtn = new QPushButton("Laplacian+");
     
     row3Layout->addWidget(m_sharpenBtn);
     row3Layout->addWidget(m_embossBtn);
-    row3Layout->addStretch();
-    
+    row3Layout->addWidget(m_laplacianBtn);
     controlLayout->addLayout(row1Layout);
     controlLayout->addLayout(row2Layout);
     controlLayout->addLayout(row3Layout);
-    
+
     m_mainLayout->addWidget(controlGroup);
     
     // Connect buttons
@@ -87,9 +90,10 @@ void MatrixMaskWidget::setupUI() {
     connect(m_normalizeBtn, &QPushButton::clicked, this, &MatrixMaskWidget::onNormalize);
     connect(m_gaussianBtn, &QPushButton::clicked, this, &MatrixMaskWidget::onPresetGaussian);
     connect(m_boxBtn, &QPushButton::clicked, this, &MatrixMaskWidget::onPresetBox);
-    connect(m_edgeBtn, &QPushButton::clicked, this, &MatrixMaskWidget::onPresetEdge);
-    connect(m_sharpenBtn, &QPushButton::clicked, this, &MatrixMaskWidget::onPresetSharpen);
-    connect(m_embossBtn, &QPushButton::clicked, this, &MatrixMaskWidget::onPresetEmboss);
+    connect(m_edgeBtn, &QPushButton::clicked, this, &MatrixMaskWidget::onPresetEdge);    connect(m_sharpenBtn, &QPushButton::clicked, this, &MatrixMaskWidget::onPresetSharpen);    connect(m_embossBtn, &QPushButton::clicked, this, &MatrixMaskWidget::onPresetEmboss);
+    connect(m_laplacianBtn, &QPushButton::clicked, this, &MatrixMaskWidget::onPresetLaplacian);
+    connect(m_laplacianNegBtn, &QPushButton::clicked, this, &MatrixMaskWidget::onPresetLaplacianNegative);
+    connect(m_logBtn, &QPushButton::clicked, this, &MatrixMaskWidget::onPresetLaplacianOfGaussian);
 }
 
 std::vector<std::vector<double>> MatrixMaskWidget::getMatrix() const {
@@ -264,6 +268,129 @@ void MatrixMaskWidget::setEmboss() {
     }
 }
 
+void MatrixMaskWidget::setLaplacian() {
+    if (m_size == 3) {
+        // Standard 3x3 Laplacian kernel (4-connected)
+        std::vector<std::vector<double>> laplacian = {
+            { 0, -1,  0},
+            {-1,  4, -1},
+            { 0, -1,  0}
+        };
+        setMatrix(laplacian);
+    } else if (m_size == 5) {
+        // 5x5 Laplacian kernel
+        std::vector<std::vector<double>> laplacian = {
+            { 0,  0, -1,  0,  0},
+            { 0, -1, -2, -1,  0},
+            {-1, -2, 16, -2, -1},
+            { 0, -1, -2, -1,  0},
+            { 0,  0, -1,  0,  0}
+        };
+        setMatrix(laplacian);
+    } else {
+        // For other sizes, create Laplacian kernel
+        std::vector<std::vector<double>> laplacian(m_size, std::vector<double>(m_size, 0.0));
+        int center = m_size / 2;
+        
+        // Set center value
+        laplacian[center][center] = -4.0;
+        
+        // Set cross pattern around center
+        if (center > 0) {
+            laplacian[center-1][center] = 1.0; // top
+            laplacian[center+1][center] = 1.0; // bottom
+            laplacian[center][center-1] = 1.0; // left
+            laplacian[center][center+1] = 1.0; // right
+        }
+        
+        setMatrix(laplacian);
+    }
+}
+
+void MatrixMaskWidget::setLaplacianNegative() {
+    if (m_size == 3) {
+        // Negative Laplacian kernel (detects dark lines on bright background)
+        std::vector<std::vector<double>> laplacian = {
+            { 0,  1,  0},
+            { 1, -4,  1},
+            { 0,  1,  0}
+        };
+        setMatrix(laplacian);
+    } else if (m_size == 5) {
+        // 5x5 Negative Laplacian kernel
+        std::vector<std::vector<double>> laplacian = {
+            { 0,  0,  1,  0,  0},
+            { 0,  1,  2,  1,  0},
+            { 1,  2,-16,  2,  1},
+            { 0,  1,  2,  1,  0},
+            { 0,  0,  1,  0,  0}
+        };
+        setMatrix(laplacian);
+    } else {
+        // For other sizes, create negative Laplacian kernel
+        std::vector<std::vector<double>> laplacian(m_size, std::vector<double>(m_size, 0.0));
+        int center = m_size / 2;
+        
+        // Set center value to negative
+        laplacian[center][center] = -4.0;
+        
+        // Set cross pattern around center to positive
+        if (center > 0) {
+            laplacian[center-1][center] = 1.0; // top
+            laplacian[center+1][center] = 1.0; // bottom
+            laplacian[center][center-1] = 1.0; // left
+            laplacian[center][center+1] = 1.0; // right
+        }
+        
+        setMatrix(laplacian);
+    }
+}
+
+void MatrixMaskWidget::setLaplacianOfGaussian() {
+    if (m_size == 3) {
+        // Przykład 3x3 LoG kernel (przybliżenie dyskretne)
+        std::vector<std::vector<double>> log = {
+            {0, -1, 0},
+            {-1, 4, -1},
+            {0, -1, 0}
+        };
+        setMatrix(log);
+    } else if (m_size == 5) {
+        // 5x5 LoG kernel (lepsze przybliżenie)
+        std::vector<std::vector<double>> log = {
+            {0,  0, -1,  0,  0},
+            {0, -1, -2, -1,  0},
+            {-1, -2, 16, -2, -1},
+            {0, -1, -2, -1,  0},
+            {0,  0, -1,  0,  0}
+        };
+        setMatrix(log);
+    } else {
+        // Dla innych rozmiarów, generuj LoG kernel z sigma = 1.0
+        double sigma = 1.0;
+        int center = m_size / 2;
+        double sigma2 = sigma * sigma;
+        double sigma4 = sigma2 * sigma2;
+        
+        std::vector<std::vector<double>> log(m_size, std::vector<double>(m_size));
+        
+        for (int i = 0; i < m_size; ++i) {
+            for (int j = 0; j < m_size; ++j) {
+                int dx = i - center;
+                int dy = j - center;
+                double r2 = dx * dx + dy * dy;
+                
+                double gaussianPart = std::exp(-r2 / (2.0 * sigma2));
+                double logPart = -1.0 / (M_PI * sigma4) * (1.0 - r2 / (2.0 * sigma2));
+                
+                log[i][j] = logPart * gaussianPart;
+            }
+        }
+        
+        setMatrix(log);
+    }
+}
+
 void MatrixMaskWidget::onValueChanged() {
     emit matrixChanged();
 }
@@ -298,6 +425,18 @@ void MatrixMaskWidget::onPresetSharpen() {
 
 void MatrixMaskWidget::onPresetEmboss() {
     setEmboss();
+}
+
+void MatrixMaskWidget::onPresetLaplacian() {
+    setLaplacian();
+}
+
+void MatrixMaskWidget::onPresetLaplacianNegative() {
+    setLaplacianNegative();
+}
+
+void MatrixMaskWidget::onPresetLaplacianOfGaussian() {
+    setLaplacianOfGaussian();
 }
 
 #include "MatrixMaskWidget.moc"

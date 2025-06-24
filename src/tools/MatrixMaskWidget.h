@@ -37,6 +37,9 @@ public:
     void setEdgeDetection();
     void setSharpen();
     void setEmboss();
+    void setLaplacian();
+    void setLaplacianNegative();
+    void setLaplacianOfGaussian();
     
     // Get matrix size
     int getSize() const { return m_size; }
@@ -54,6 +57,9 @@ private slots:
     void onPresetEdge();
     void onPresetSharpen();
     void onPresetEmboss();
+    void onPresetLaplacian();
+    void onPresetLaplacianNegative();
+    void onPresetLaplacianOfGaussian();
 
 private:
     void setupUI();
@@ -72,6 +78,9 @@ private:
     QPushButton* m_edgeBtn;
     QPushButton* m_sharpenBtn;
     QPushButton* m_embossBtn;
+    QPushButton* m_laplacianBtn;
+    QPushButton* m_laplacianNegBtn;
+    QPushButton* m_logBtn;
 };
 
 #endif // MATRIXMASKWIDGET_H

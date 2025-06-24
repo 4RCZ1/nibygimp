@@ -20,6 +20,7 @@
 #include "src/tools/HistogramDisplay.h" // Dodany include dla wyświetlania histogramu
 #include "src/tools/Blur.h" // Dodany include dla rozmycia
 #include "src/tools/CustomBlurDialog.h" // Dodany include dla niestandardowego rozmycia
+#include "src/tools/EdgeDetection.h" // Dodany include dla wykrywania krawędzi
 
 int main(int argc, char *argv[]) {
   QApplication a(argc, argv);
@@ -222,6 +223,124 @@ int main(int argc, char *argv[]) {
         Blur::customMatrixBlur(image, matrix);
         updateImageView();
         QMessageBox::information(nullptr, "Blur", "Niestandardowe rozmycie zostało zastosowane.");
+      }
+    } else {
+      QMessageBox::warning(nullptr, "Error", "No image loaded.");
+    }
+  });
+
+  // Dodanie separatora dla sekcji wykrywania krawędzi
+  toolsMenu->addSeparator();
+  
+  // Dodanie menu dla funkcji wykrywania krawędzi
+  QMenu *edgeMenu = toolsMenu->addMenu("Edge Detection");
+  
+  // Akcja operatora Laplace'a z wyborem rozmiaru jądra
+  QAction *laplacianAction = edgeMenu->addAction("Laplacian Edge Detection");
+  QObject::connect(laplacianAction, &QAction::triggered, &window, [&image, updateImageView, &window]() {
+    if (image) {
+      bool ok;
+      int kernelSize = QInputDialog::getInt(&window, "Laplacian Edge Detection",
+                                          "Kernel size (3, 5, 7, 9):",
+                                          3, 3, 9, 2, &ok);
+      if (ok) {
+        EdgeDetection::laplacianFilter(image, kernelSize);
+        updateImageView();
+        QMessageBox::information(nullptr, "Edge Detection", "Operator Laplace'a został zastosowany.");
+      }
+    } else {
+      QMessageBox::warning(nullptr, "Error", "No image loaded.");
+    }
+  });
+  
+  // Akcja operatora Laplace'a w skali szarości
+  QAction *laplacianGrayAction = edgeMenu->addAction("Laplacian Edge Detection (Grayscale)");
+  QObject::connect(laplacianGrayAction, &QAction::triggered, &window, [&image, updateImageView, &window]() {
+    if (image) {
+      bool ok;
+      int kernelSize = QInputDialog::getInt(&window, "Laplacian Edge Detection (Grayscale)",
+                                          "Kernel size (3, 5, 7, 9):",
+                                          3, 3, 9, 2, &ok);
+      if (ok) {
+        EdgeDetection::laplacianFilterGrayscale(image, kernelSize);
+        updateImageView();
+        QMessageBox::information(nullptr, "Edge Detection", "Operator Laplace'a (skala szarości) został zastosowany.");
+      }
+    } else {
+      QMessageBox::warning(nullptr, "Error", "No image loaded.");
+    }
+  });
+  
+  // Akcja negatywnego operatora Laplace'a
+  QAction *laplacianNegAction = edgeMenu->addAction("Laplacian Edge Detection (Negative)");
+  QObject::connect(laplacianNegAction, &QAction::triggered, &window, [&image, updateImageView, &window]() {
+    if (image) {
+      bool ok;
+      int kernelSize = QInputDialog::getInt(&window, "Laplacian Edge Detection (Negative)",
+                                          "Kernel size (3, 5, 7, 9):",
+                                          3, 3, 9, 2, &ok);
+      if (ok) {
+        EdgeDetection::laplacianFilterNegative(image, kernelSize);
+        updateImageView();
+        QMessageBox::information(nullptr, "Edge Detection", "Negatywny operator Laplace'a został zastosowany.");
+      }
+    } else {
+      QMessageBox::warning(nullptr, "Error", "No image loaded.");
+    }
+  });
+  
+  // Akcja operatora Sobel
+  QAction *sobelAction = edgeMenu->addAction("Sobel Edge Detection");
+  QObject::connect(sobelAction, &QAction::triggered, &window, [&image, updateImageView, &window]() {
+    if (image) {
+      EdgeDetection::sobelFilter(image);
+      updateImageView();
+      QMessageBox::information(nullptr, "Edge Detection", "Operator Sobel został zastosowany.");
+    } else {
+      QMessageBox::warning(nullptr, "Error", "No image loaded.");
+    }
+  });
+  
+  // Akcja Laplacian of Gaussian
+  QAction *logAction = edgeMenu->addAction("Laplacian of Gaussian (LoG)");
+  QObject::connect(logAction, &QAction::triggered, &window, [&image, updateImageView, &window]() {
+    if (image) {
+      bool ok1, ok2, ok3;
+      double sigma = QInputDialog::getDouble(&window, "Laplacian of Gaussian",
+                                           "Sigma value (0.5 to 3.0):",
+                                           1.0, 0.5, 3.0, 2, &ok1);
+      if (ok1) {
+        int windowSize = QInputDialog::getInt(&window, "Laplacian of Gaussian",
+                                            "Window size for thresholding (3, 5, 7):",
+                                            3, 3, 7, 2, &ok2);
+        if (ok2) {
+          double threshold = QInputDialog::getDouble(&window, "Laplacian of Gaussian",
+                                                   "Threshold value (0.01 to 0.5):\n(procent zakresu wartości dla progowania)",
+                                                   0.1, 0.01, 0.5, 3, &ok3);
+          if (ok3) {
+            EdgeDetection::laplacianOfGaussian(image, sigma, windowSize, threshold);
+            updateImageView();
+            QMessageBox::information(nullptr, "Edge Detection", "Laplacian of Gaussian został zastosowany.");
+          }
+        }
+      }
+    } else {
+      QMessageBox::warning(nullptr, "Error", "No image loaded.");
+    }
+  });
+  
+  // Akcja uproszczonego Laplacian of Gaussian
+  QAction *logSimpleAction = edgeMenu->addAction("Laplacian of Gaussian (Simple)");
+  QObject::connect(logSimpleAction, &QAction::triggered, &window, [&image, updateImageView, &window]() {
+    if (image) {
+      bool ok;
+      double sigma = QInputDialog::getDouble(&window, "Laplacian of Gaussian (Simple)",
+                                           "Sigma value (0.5 to 3.0):",
+                                           1.0, 0.5, 3.0, 2, &ok);
+      if (ok) {
+        EdgeDetection::laplacianOfGaussianSimple(image, sigma);
+        updateImageView();
+        QMessageBox::information(nullptr, "Edge Detection", "Uproszczony Laplacian of Gaussian został zastosowany.");
       }
     } else {
       QMessageBox::warning(nullptr, "Error", "No image loaded.");
