@@ -164,6 +164,30 @@ void EdgeDetection::laplacianFilterNegative(std::unique_ptr<Image>& image, int k
     applyConvolution(image, kernel);
 }
 
+void EdgeDetection::robertsFilter(std::unique_ptr<Image>& image) {
+    if (!image) {
+        return;
+    }
+    
+    // Generowanie jąder Robertsa
+    auto robertsKernels = generateRobertsKernels();
+    
+    // Aplikowanie filtrów gradientowych
+    applyGradientConvolution(image, robertsKernels.first, robertsKernels.second);
+}
+
+void EdgeDetection::prewittFilter(std::unique_ptr<Image>& image) {
+    if (!image) {
+        return;
+    }
+    
+    // Generowanie jąder Prewitta
+    auto prewittKernels = generatePrewittKernels();
+    
+    // Aplikowanie filtrów gradientowych
+    applyGradientConvolution(image, prewittKernels.first, prewittKernels.second);
+}
+
 void EdgeDetection::sobelFilter(std::unique_ptr<Image>& image) {
     if (!image) {
         return;
@@ -172,8 +196,8 @@ void EdgeDetection::sobelFilter(std::unique_ptr<Image>& image) {
     // Generowanie jąder Sobela
     auto sobelKernels = generateSobelKernels();
     
-    // Aplikowanie filtrów Sobela
-    applySobelConvolution(image, sobelKernels.first, sobelKernels.second);
+    // Aplikowanie filtrów gradientowych
+    applyGradientConvolution(image, sobelKernels.first, sobelKernels.second);
 }
 
 void EdgeDetection::customEdgeFilter(std::unique_ptr<Image>& image, const std::vector<std::vector<double>>& matrix) {
@@ -398,15 +422,49 @@ void EdgeDetection::applyLoGWithThresholding(std::unique_ptr<Image>& image, doub
     }
 }
 
+std::pair<std::vector<std::vector<double>>, std::vector<std::vector<double>>> EdgeDetection::generateRobertsKernels() {
+    // Operator Robertsa X (ukośne krawędzie)
+    std::vector<std::vector<double>> robertsX = {
+        {1, 0},
+        {0, -1}
+    };
+    
+    // Operator Robertsa Y (ukośne krawędzie)
+    std::vector<std::vector<double>> robertsY = {
+        {0, 1},
+        {-1, 0}
+    };
+    
+    return std::make_pair(robertsX, robertsY);
+}
+
+std::pair<std::vector<std::vector<double>>, std::vector<std::vector<double>>> EdgeDetection::generatePrewittKernels() {
+    // Operator Prewitta X (pionowe krawędzie)
+    std::vector<std::vector<double>> prewittX = {
+        {-1, 0, 1},
+        {-1, 0, 1},
+        {-1, 0, 1}
+    };
+    
+    // Operator Prewitta Y (poziome krawędzie)
+    std::vector<std::vector<double>> prewittY = {
+        {-1, -1, -1},
+        { 0,  0,  0},
+        { 1,  1,  1}
+    };
+    
+    return std::make_pair(prewittX, prewittY);
+}
+
 std::pair<std::vector<std::vector<double>>, std::vector<std::vector<double>>> EdgeDetection::generateSobelKernels() {
-    // Sobel operator X (vertical edges)
+    // Operator Sobela X (pionowe krawędzie)
     std::vector<std::vector<double>> sobelX = {
         {-1, 0, 1},
         {-2, 0, 2},
         {-1, 0, 1}
     };
     
-    // Sobel operator Y (horizontal edges)
+    // Operator Sobela Y (poziome krawędzie)
     std::vector<std::vector<double>> sobelY = {
         {-1, -2, -1},
         { 0,  0,  0},
@@ -525,13 +583,15 @@ void EdgeDetection::applyLaplacianGrayscaleConvolution(std::unique_ptr<Image>& i
     }
 }
 
-void EdgeDetection::applySobelConvolution(std::unique_ptr<Image>& image, 
-                                         const std::vector<std::vector<double>>& kernelX,
-                                         const std::vector<std::vector<double>>& kernelY) {
+void EdgeDetection::applyGradientConvolution(std::unique_ptr<Image>& image, 
+                                            const std::vector<std::vector<double>>& kernelX,
+                                            const std::vector<std::vector<double>>& kernelY) {
     int width = image->width();
     int height = image->height();
-    int kernelSize = kernelX.size();
-    int kernelRadius = kernelSize / 2;
+    int kernelSizeX = kernelX.size();
+    int kernelSizeY = kernelY.size();
+    int kernelRadiusX = kernelSizeX / 2;
+    int kernelRadiusY = kernelSizeY / 2;
     
     // Tworzymy kopię oryginalnego obrazu do odczytu wartości
     std::vector<std::vector<QColor>> originalPixels(width, std::vector<QColor>(height));
@@ -541,17 +601,19 @@ void EdgeDetection::applySobelConvolution(std::unique_ptr<Image>& image,
         }
     }
     
-    // Aplikowanie konwolucji Sobela
+    // Aplikowanie konwolucji gradientowej zgodnie z dokumentacją
     for (int x = 0; x < width; x++) {
         for (int y = 0; y < height; y++) {
+            // Image_x = horizontalDetection() - gradient po x
             double gxR = 0.0, gxG = 0.0, gxB = 0.0;
+            // Image_y = verticalDetection() - gradient po y  
             double gyR = 0.0, gyG = 0.0, gyB = 0.0;
             
-            // Iteracja przez jądro
-            for (int kx = 0; kx < kernelSize; kx++) {
-                for (int ky = 0; ky < kernelSize; ky++) {
-                    int pixelX = x + kx - kernelRadius;
-                    int pixelY = y + ky - kernelRadius;
+            // Iteracja przez jądro X
+            for (int kx = 0; kx < kernelSizeX; kx++) {
+                for (int ky = 0; ky < kernelSizeX; ky++) {
+                    int pixelX = x + kx - kernelRadiusX;
+                    int pixelY = y + ky - kernelRadiusX;
                     
                     // Obsługa pikseli poza granicami obrazu (odbicie)
                     pixelX = std::max(0, std::min(width - 1, pixelX));
@@ -560,10 +622,25 @@ void EdgeDetection::applySobelConvolution(std::unique_ptr<Image>& image,
                     QColor pixel = originalPixels[pixelX][pixelY];
                     double kernelXValue = kernelX[kx][ky];
                     double kernelYValue = kernelY[kx][ky];
-                    
+
                     gxR += pixel.red() * kernelXValue;
                     gxG += pixel.green() * kernelXValue;
                     gxB += pixel.blue() * kernelXValue;
+                }
+            }
+            
+            // Iteracja przez jądro Y
+            for (int kx = 0; kx < kernelSizeY; kx++) {
+                for (int ky = 0; ky < kernelSizeY; ky++) {
+                    int pixelX = x + kx - kernelRadiusY;
+                    int pixelY = y + ky - kernelRadiusY;
+                    
+                    // Obsługa pikseli poza granicami obrazu (odbicie)
+                    pixelX = std::max(0, std::min(width - 1, pixelX));
+                    pixelY = std::max(0, std::min(height - 1, pixelY));
+                    
+                    QColor pixel = originalPixels[pixelX][pixelY];
+                    double kernelYValue = kernelY[kx][ky];
                     
                     gyR += pixel.red() * kernelYValue;
                     gyG += pixel.green() * kernelYValue;
@@ -571,7 +648,7 @@ void EdgeDetection::applySobelConvolution(std::unique_ptr<Image>& image,
                 }
             }
             
-            // Obliczenie magnitude gradientu: sqrt(Gx² + Gy²)
+            // Obliczenie magnitude gradientu: I_new(i,j) := √(Image_x(i,j)² + Image_y(i,j)²)
             double magnitudeR = std::sqrt(gxR * gxR + gyR * gyR);
             double magnitudeG = std::sqrt(gxG * gxG + gyG * gyG);
             double magnitudeB = std::sqrt(gxB * gxB + gyB * gyB);

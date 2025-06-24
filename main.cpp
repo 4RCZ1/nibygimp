@@ -127,13 +127,13 @@ int main(int argc, char *argv[]) {
       QMessageBox::warning(nullptr, "Error", "No image loaded.");
     }
   });
-  
+
   // Dodanie separatora dla sekcji histogramu
   toolsMenu->addSeparator();
-  
+
   // Dodanie menu dla funkcji histogramu
   QMenu *histogramMenu = toolsMenu->addMenu("Histogram");
-  
+
   // Akcja wyświetlania histogramu
   QAction *showHistogramAction = histogramMenu->addAction("Show Histogram");
   QObject::connect(showHistogramAction, &QAction::triggered, &window, [&image, &window]() {
@@ -146,7 +146,7 @@ int main(int argc, char *argv[]) {
       QMessageBox::warning(nullptr, "Error", "No image loaded.");
     }
   });
-  
+
   // Akcja rozciągania histogramu
   QAction *stretchHistogramAction = histogramMenu->addAction("Stretch Histogram");
   QObject::connect(stretchHistogramAction, &QAction::triggered, &window, [&image, updateImageView]() {
@@ -158,7 +158,7 @@ int main(int argc, char *argv[]) {
       QMessageBox::warning(nullptr, "Error", "No image loaded.");
     }
   });
-  
+
   // Akcja wyrównywania histogramu
   QAction *equalizeHistogramAction = histogramMenu->addAction("Equalize Histogram");
   QObject::connect(equalizeHistogramAction, &QAction::triggered, &window, [&image, updateImageView]() {
@@ -173,10 +173,10 @@ int main(int argc, char *argv[]) {
 
   // Dodanie separatora dla sekcji rozmycia
   toolsMenu->addSeparator();
-  
+
   // Dodanie menu dla funkcji rozmycia
   QMenu *blurMenu = toolsMenu->addMenu("Blur");
-  
+
   // Akcja rozmycia Gaussa z wyborem parametrów
   QAction *gaussianBlurAction = blurMenu->addAction("Gaussian Blur");
   QObject::connect(gaussianBlurAction, &QAction::triggered, &window, [&image, updateImageView, &window]() {
@@ -194,7 +194,7 @@ int main(int argc, char *argv[]) {
       QMessageBox::warning(nullptr, "Error", "No image loaded.");
     }
   });
-  
+
   // Akcja rozmycia równomiernego z wyborem parametrów
   QAction *uniformBlurAction = blurMenu->addAction("Uniform Blur");
   QObject::connect(uniformBlurAction, &QAction::triggered, &window, [&image, updateImageView, &window]() {
@@ -212,7 +212,7 @@ int main(int argc, char *argv[]) {
       QMessageBox::warning(nullptr, "Error", "No image loaded.");
     }
   });
-  
+
   // Akcja niestandardowego rozmycia z macierzą 3x3
   QAction *customBlurAction = blurMenu->addAction("Custom Matrix Blur");
   QObject::connect(customBlurAction, &QAction::triggered, &window, [&image, updateImageView, &window]() {
@@ -231,10 +231,46 @@ int main(int argc, char *argv[]) {
 
   // Dodanie separatora dla sekcji wykrywania krawędzi
   toolsMenu->addSeparator();
-  
+
   // Dodanie menu dla funkcji wykrywania krawędzi
   QMenu *edgeMenu = toolsMenu->addMenu("Edge Detection");
-  
+
+  QAction *robertsBlurAction = edgeMenu->addAction("Roberts Edge Detection");
+  QObject::connect(robertsBlurAction, &QAction::triggered, &window, [&image, updateImageView, &window]() {
+    if (image) {
+      EdgeDetection::robertsFilter(image);
+      updateImageView();
+      QMessageBox::information(nullptr, "Edge Detection", "Operator Robertsa został zastosowany.");
+    } else {
+      QMessageBox::warning(nullptr, "Error", "No image loaded.");
+    }
+  });
+
+  // Akcja operatora Prewitta
+  QAction *prewittBlurAction = edgeMenu->addAction("Prewitt Edge Detection");
+  QObject::connect(prewittBlurAction, &QAction::triggered, &window, [&image, updateImageView, &window]() {
+    if (image) {
+      EdgeDetection::prewittFilter(image);
+      updateImageView();
+      QMessageBox::information(nullptr, "Edge Detection", "Operator Prewitta został zastosowany.");
+    } else {
+      QMessageBox::warning(nullptr, "Error", "No image loaded.");
+    }
+  });
+
+  // Akcja operatora Sobela
+  QAction *sobelBlurAction = edgeMenu->addAction("Sobel Edge Detection");
+  QObject::connect(sobelBlurAction, &QAction::triggered, &window, [&image, updateImageView, &window]() {
+    if (image) {
+      EdgeDetection::sobelFilter(image);
+      updateImageView();
+      QMessageBox::information(nullptr, "Edge Detection", "Operator Sobela został zastosowany.");
+    } else {
+      QMessageBox::warning(nullptr, "Error", "No image loaded.");
+    }
+  });
+
+
   // Akcja operatora Laplace'a z wyborem rozmiaru jądra
   QAction *laplacianAction = edgeMenu->addAction("Laplacian Edge Detection");
   QObject::connect(laplacianAction, &QAction::triggered, &window, [&image, updateImageView, &window]() {
@@ -252,7 +288,7 @@ int main(int argc, char *argv[]) {
       QMessageBox::warning(nullptr, "Error", "No image loaded.");
     }
   });
-  
+
   // Akcja operatora Laplace'a w skali szarości
   QAction *laplacianGrayAction = edgeMenu->addAction("Laplacian Edge Detection (Grayscale)");
   QObject::connect(laplacianGrayAction, &QAction::triggered, &window, [&image, updateImageView, &window]() {
@@ -270,7 +306,7 @@ int main(int argc, char *argv[]) {
       QMessageBox::warning(nullptr, "Error", "No image loaded.");
     }
   });
-  
+
   // Akcja negatywnego operatora Laplace'a
   QAction *laplacianNegAction = edgeMenu->addAction("Laplacian Edge Detection (Negative)");
   QObject::connect(laplacianNegAction, &QAction::triggered, &window, [&image, updateImageView, &window]() {
@@ -288,19 +324,7 @@ int main(int argc, char *argv[]) {
       QMessageBox::warning(nullptr, "Error", "No image loaded.");
     }
   });
-  
-  // Akcja operatora Sobel
-  QAction *sobelAction = edgeMenu->addAction("Sobel Edge Detection");
-  QObject::connect(sobelAction, &QAction::triggered, &window, [&image, updateImageView, &window]() {
-    if (image) {
-      EdgeDetection::sobelFilter(image);
-      updateImageView();
-      QMessageBox::information(nullptr, "Edge Detection", "Operator Sobel został zastosowany.");
-    } else {
-      QMessageBox::warning(nullptr, "Error", "No image loaded.");
-    }
-  });
-  
+
   // Akcja Laplacian of Gaussian
   QAction *logAction = edgeMenu->addAction("Laplacian of Gaussian (LoG)");
   QObject::connect(logAction, &QAction::triggered, &window, [&image, updateImageView, &window]() {
@@ -328,7 +352,7 @@ int main(int argc, char *argv[]) {
       QMessageBox::warning(nullptr, "Error", "No image loaded.");
     }
   });
-  
+
   // Akcja uproszczonego Laplacian of Gaussian
   QAction *logSimpleAction = edgeMenu->addAction("Laplacian of Gaussian (Simple)");
   QObject::connect(logSimpleAction, &QAction::triggered, &window, [&image, updateImageView, &window]() {

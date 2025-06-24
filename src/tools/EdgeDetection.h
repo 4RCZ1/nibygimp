@@ -22,7 +22,9 @@ public:
     // Uproszczona wersja LoG bez progowania (dla testów)
     static void laplacianOfGaussianSimple(std::unique_ptr<Image>& image, double sigma = 1.0);
     
-    // Operator Sobel - wykrywanie krawędzi przez gradient
+    // Operatory gradientowe - wykrywanie krawędzi przez gradient
+    static void robertsFilter(std::unique_ptr<Image>& image);
+    static void prewittFilter(std::unique_ptr<Image>& image);
     static void sobelFilter(std::unique_ptr<Image>& image);
     
     // Filtr wykrywania krawędzi z macierzą niestandardową
@@ -40,8 +42,15 @@ private:
       // Aplikowanie algorytmu LoG z progowaniem zgodnie z instrukcją
     static void applyLoGWithThresholding(std::unique_ptr<Image>& image, double sigma, int windowSize, double threshold);
     
-    // Generowanie jąder Sobela (Gx i Gy)
+    // Generowanie jąder gradientowych
+    static std::pair<std::vector<std::vector<double>>, std::vector<std::vector<double>>> generateRobertsKernels();
+    static std::pair<std::vector<std::vector<double>>, std::vector<std::vector<double>>> generatePrewittKernels();
     static std::pair<std::vector<std::vector<double>>, std::vector<std::vector<double>>> generateSobelKernels();
+    
+    // Aplikowanie konwolucji gradientowej
+    static void applyGradientConvolution(std::unique_ptr<Image>& image, 
+                                        const std::vector<std::vector<double>>& kernelX,
+                                        const std::vector<std::vector<double>>& kernelY);
     
     // Aplikowanie konwolucji do obrazu (współdzielone z Blur)
     static void applyConvolution(std::unique_ptr<Image>& image, const std::vector<std::vector<double>>& kernel);
@@ -49,12 +58,7 @@ private:
     // Aplikowanie konwolucji Laplaciana z konwersją na skalę szarości
     static void applyLaplacianGrayscaleConvolution(std::unique_ptr<Image>& image, const std::vector<std::vector<double>>& kernel);
     
-    // Aplikowanie dwóch jąder jednocześnie (dla Sobela)
-    static void applySobelConvolution(std::unique_ptr<Image>& image, 
-                                     const std::vector<std::vector<double>>& kernelX,
-                                     const std::vector<std::vector<double>>& kernelY);
-    
-    // Funkcja pomocnicza do ograniczenia wartości do zakresu 0-255
+    // Funkcja pomocnicza do ograniczania wartości
     static int clamp(int value, int min = 0, int max = 255);
 };
 
