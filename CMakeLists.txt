@@ -39,7 +39,9 @@ add_executable(nibygimp main.cpp
         src/tools/CustomBlurDialog.cpp
         src/tools/CustomBlurDialog.h
         src/tools/EdgeDetection.cpp
-        src/tools/EdgeDetection.h)
+        src/tools/EdgeDetection.h
+        src/tools/Canny.cpp
+        src/tools/Canny.h)
 target_link_libraries(nibygimp
   Qt::Core
   Qt::Gui

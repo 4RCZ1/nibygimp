@@ -5,6 +5,7 @@
 #include <vector>
 #include <cmath>
 #include "../image/Image.h"
+#include "Canny.h"
 
 class EdgeDetection {
 public:
@@ -26,6 +27,11 @@ public:
     static void robertsFilter(std::unique_ptr<Image>& image);
     static void prewittFilter(std::unique_ptr<Image>& image);
     static void sobelFilter(std::unique_ptr<Image>& image);
+    
+    // Algorytm Canny do wykrywania krawędzi - używa klasy Canny
+    static void cannyEdgeDetection(std::unique_ptr<Image>& image, double upperThresh = 100.0, double lowerThresh = 50.0) {
+        Canny::applyCanny(image, upperThresh, lowerThresh);
+    }
     
     // Filtr wykrywania krawędzi z macierzą niestandardową
     static void customEdgeFilter(std::unique_ptr<Image>& image, const std::vector<std::vector<double>>& matrix);

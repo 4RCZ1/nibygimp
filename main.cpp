@@ -371,6 +371,29 @@ int main(int argc, char *argv[]) {
     }
   });
 
+  // Akcja algorytmu Canny
+  QAction *cannyAction = edgeMenu->addAction("Canny Edge Detection");
+  QObject::connect(cannyAction, &QAction::triggered, &window, [&image, updateImageView, &window]() {
+    if (image) {
+      bool ok1, ok2;
+      double upperThresh = QInputDialog::getDouble(&window, "Canny Edge Detection",
+                                                 "Upper threshold (50.0 to 200.0):",
+                                                 100.0, 50.0, 200.0, 1, &ok1);
+      if (ok1) {
+        double lowerThresh = QInputDialog::getDouble(&window, "Canny Edge Detection",
+                                                   "Lower threshold (20.0 to 100.0):",
+                                                   50.0, 20.0, 100.0, 1, &ok2);
+        if (ok2) {
+          EdgeDetection::cannyEdgeDetection(image, upperThresh, lowerThresh);
+          updateImageView();
+          QMessageBox::information(nullptr, "Edge Detection", "Algorytm Canny został zastosowany.");
+        }
+      }
+    } else {
+      QMessageBox::warning(nullptr, "Error", "No image loaded.");
+    }
+  });
+
   window.resize(800, 600);
   window.show();
 
