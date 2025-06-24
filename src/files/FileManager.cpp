@@ -28,10 +28,7 @@ void FileManager::openFile(QLabel *imageLabel, std::unique_ptr<Image> &image) {
       QImage qImage = image->toQImage();
       QPixmap pixmap = QPixmap::fromImage(qImage);
 
-      QPixmap scaledPixmap =
-          pixmap.scaled(400, 400, Qt::KeepAspectRatio, Qt::FastTransformation);
-
-      imageLabel->setPixmap(scaledPixmap);
+      imageLabel->setPixmap(pixmap);
     } else {
       qDebug() << "Failed to load image";
     }
