@@ -22,6 +22,7 @@
 #include "src/tools/CustomBlurDialog.h" // Dodany include dla niestandardowego rozmycia
 #include "src/tools/EdgeDetection.h" // Dodany include dla wykrywania krawędzi
 #include "src/tools/Binarization.h" // Dodany include dla binaryzacji
+#include "src/tools/Watershed.h" // Dodany include dla segmentacji wododziałowej
 
 int main(int argc, char *argv[]) {
   QApplication a(argc, argv);
@@ -414,6 +415,38 @@ int main(int argc, char *argv[]) {
         updateImageView();
         QMessageBox::information(nullptr, "Binarization", "Binaryzacja z progiem została zastosowana.");
       }
+    } else {
+      QMessageBox::warning(nullptr, "Error", "No image loaded.");
+    }
+  });
+
+  // Akcja binaryzacji metodą Otsu
+  QAction *otsuBinarizationAction = binarizationMenu->addAction("Otsu Binarization");
+  QObject::connect(otsuBinarizationAction, &QAction::triggered, &window, [&image, updateImageView, &window]() {
+    if (image) {
+      Binarization::otsuBinarization(image);
+      updateImageView();
+      QMessageBox::information(nullptr, "Binarization", "Binaryzacja metodą Otsu została zastosowana (próg automatycznie obliczony).");
+    } else {
+      QMessageBox::warning(nullptr, "Error", "No image loaded.");
+    }
+  });
+
+  // Dodanie separatora dla sekcji segmentacji
+  toolsMenu->addSeparator();
+
+  // Dodanie menu dla funkcji segmentacji
+  QMenu *segmentationMenu = toolsMenu->addMenu("Segmentation");
+
+  // Akcja segmentacji wododziałowej algorytmem Vincent-Soille'a
+  QAction *watershedAction = segmentationMenu->addAction("Watershed Segmentation (Region Growing)");
+  QObject::connect(watershedAction, &QAction::triggered, &window, [&image, updateImageView, &window]() {
+    if (image) {
+      Greyscale::convertToGreyscale(image);
+      VincentSoilleWatershed watershed(8);
+      watershed.watershed(image);
+      updateImageView();
+      QMessageBox::information(nullptr, "Segmentation", "Segmentacja wododziałowa została zastosowana.\nRóżne wyraziste kolory reprezentują różne regiony obrazu.");
     } else {
       QMessageBox::warning(nullptr, "Error", "No image loaded.");
     }

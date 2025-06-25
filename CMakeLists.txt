@@ -43,7 +43,9 @@ add_executable(nibygimp main.cpp
         src/tools/Canny.cpp
         src/tools/Canny.h
         src/tools/Binarization.cpp
-        src/tools/Binarization.h)
+        src/tools/Binarization.h
+        src/tools/Watershed.cpp
+        src/tools/Watershed.h)
 target_link_libraries(nibygimp
   Qt::Core
   Qt::Gui
