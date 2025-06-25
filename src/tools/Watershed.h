@@ -28,7 +28,7 @@ private:
     // Constants
     static const int WATERSHED_LINE = 0;
     static const int MASK = 2;
-    static const int INIT = 0;
+    static const int INIT = -1;
     
     // Image dimensions
     int m_width, m_height;

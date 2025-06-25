@@ -439,14 +439,14 @@ int main(int argc, char *argv[]) {
   QMenu *segmentationMenu = toolsMenu->addMenu("Segmentation");
 
   // Akcja segmentacji wododziałowej algorytmem Vincent-Soille'a
-  QAction *watershedAction = segmentationMenu->addAction("Watershed Segmentation (Region Growing)");
+  QAction *watershedAction = segmentationMenu->addAction("Watershed Segmentation (Vincent-Soille)");
   QObject::connect(watershedAction, &QAction::triggered, &window, [&image, updateImageView, &window]() {
     if (image) {
       Greyscale::convertToGreyscale(image);
       VincentSoilleWatershed watershed(8);
       watershed.watershed(image);
       updateImageView();
-      QMessageBox::information(nullptr, "Segmentation", "Segmentacja wododziałowa została zastosowana.\nRóżne wyraziste kolory reprezentują różne regiony obrazu.");
+      QMessageBox::information(nullptr, "Segmentation", "Segmentacja wododziałowa została zastosowana.");
     } else {
       QMessageBox::warning(nullptr, "Error", "No image loaded.");
     }

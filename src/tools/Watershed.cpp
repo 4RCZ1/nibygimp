@@ -69,9 +69,7 @@ void VincentSoilleWatershed::firstPass(std::unique_ptr<Image> &image, const std:
     for (const auto& pixel : sortedPixels) {
         int x = pixel.x;
         int y = pixel.y;
-        
-        labels[y][x] = MASK;
-        
+
         // Check if pixel is a local minimum
         if (isLocalMinimum(image, x, y)) {
             currentLabel++;
@@ -82,50 +80,56 @@ void VincentSoilleWatershed::firstPass(std::unique_ptr<Image> &image, const std:
 }
 
 void VincentSoilleWatershed::immersionSimulation(std::unique_ptr<Image> &image, const std::vector<Pixel>& sortedPixels) {
-    int currentDistance = 1;
     size_t pixelIndex = 0;
-    
+
     while (pixelIndex < sortedPixels.size()) {
         // Get current intensity level
         int currentIntensity = sortedPixels[pixelIndex].intensity;
         std::queue<std::pair<int, int>> fifoQueue;
-        
-        // Collect all pixels at this intensity level and mark neighbors
-        while (pixelIndex < sortedPixels.size() && 
+
+        // Collect all pixels at this intensity level
+        std::vector<std::pair<int, int>> currentLevelPixels;
+
+        while (pixelIndex < sortedPixels.size() &&
                sortedPixels[pixelIndex].intensity == currentIntensity) {
-            
+
             int x = sortedPixels[pixelIndex].x;
             int y = sortedPixels[pixelIndex].y;
-            
-            labels[y][x] = MASK;
-            
-            // Check neighbors for existing labels
-            auto neighbors = getNeighbors(x, y);
-            for (const auto& neighbor : neighbors) {
-                int nx = neighbor.first;
-                int ny = neighbor.second;
-                
-                if (labels[ny][nx] > 0 || labels[ny][nx] == WATERSHED_LINE) {
-                    distances[y][x] = 1;
-                    fifoQueue.push({x, y});
-                    break;
+
+            // Only process if not already labeled
+            if (labels[y][x] == INIT) {
+                labels[y][x] = MASK;
+                currentLevelPixels.push_back({x, y});
+
+                // Check neighbors for existing labels
+                auto neighbors = getNeighbors(x, y);
+                for (const auto& neighbor : neighbors) {
+                    int nx = neighbor.first;
+                    int ny = neighbor.second;
+
+                    if (labels[ny][nx] > 0 || labels[ny][nx] == WATERSHED_LINE) {
+                        distances[y][x] = 1;
+                        fifoQueue.push({x, y});
+                        break;
+                    }
                 }
             }
-            
             pixelIndex++;
         }
-        
+
         // Extend labeled regions
-        currentDistance = 1;
-        fifoQueue.push({-1, -1}); // Level separator
-        
+        int currentDistance = 1;
+        if (!fifoQueue.empty()) {
+            fifoQueue.push({-1, -1}); // Level separator
+        }
+
         while (!fifoQueue.empty()) {
             auto current = fifoQueue.front();
             fifoQueue.pop();
-            
+
             int x = current.first;
             int y = current.second;
-            
+
             // Check for level separator
             if (x == -1 && y == -1) {
                 if (!fifoQueue.empty()) {
@@ -136,18 +140,18 @@ void VincentSoilleWatershed::immersionSimulation(std::unique_ptr<Image> &image, 
                     break;
                 }
             }
-            
+
             // Process current pixel
             std::set<int> neighborLabels;
             auto neighbors = getNeighbors(x, y);
-            
+
             for (const auto& neighbor : neighbors) {
                 int nx = neighbor.first;
                 int ny = neighbor.second;
-                
-                if (distances[ny][nx] < currentDistance && 
+
+                if (distances[ny][nx] < currentDistance &&
                     (labels[ny][nx] > 0 || labels[ny][nx] == WATERSHED_LINE)) {
-                    
+
                     if (labels[ny][nx] > 0) {
                         neighborLabels.insert(labels[ny][nx]);
                     }
@@ -156,7 +160,7 @@ void VincentSoilleWatershed::immersionSimulation(std::unique_ptr<Image> &image, 
                     fifoQueue.push({nx, ny});
                 }
             }
-            
+
             // Assign label based on neighbors
             if (neighborLabels.size() == 1) {
                 labels[y][x] = *neighborLabels.begin();
@@ -164,21 +168,17 @@ void VincentSoilleWatershed::immersionSimulation(std::unique_ptr<Image> &image, 
                 labels[y][x] = WATERSHED_LINE;
             }
         }
-        
-        // Handle remaining MASK pixels at this level (create new regions)
-        for (size_t i = pixelIndex - 1; i < sortedPixels.size() && 
-             sortedPixels[i].intensity == currentIntensity; --i) {
-            
-            int x = sortedPixels[i].x;
-            int y = sortedPixels[i].y;
-            
+
+        // Handle remaining MASK pixels at this level - FIXED LOOP
+        for (const auto& pixelPos : currentLevelPixels) {
+            int x = pixelPos.first;
+            int y = pixelPos.second;
+
             if (labels[y][x] == MASK) {
                 currentLabel++;
                 std::queue<std::pair<int, int>> floodQueue;
                 floodFill(x, y, currentLabel, floodQueue);
             }
-            
-            if (i == 0) break; // Prevent underflow
         }
     }
 }
@@ -266,7 +266,7 @@ void VincentSoilleWatershed::createResultImage(std::unique_ptr<Image> &image) co
             }
         }
     }
-    
+
     // Create visualization
     for (int y = 0; y < m_height; ++y) {
         for (int x = 0; x < m_width; ++x) {
@@ -276,7 +276,6 @@ void VincentSoilleWatershed::createResultImage(std::unique_ptr<Image> &image) co
             } else if (labels[y][x] > 0) {
                 // Different regions with different intensities
                 int intensity = (labels[y][x] * 255) / maxLabel;
-                qDebug() << "Pixel at (" << x << "," << y << "): " << ", label=" << labels[y][x] << ", maxLabel=" << maxLabel;
                 image->setPixel(x, y, intensity, intensity, intensity);
             } else {
                 // Background in black
