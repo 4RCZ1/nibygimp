@@ -40,6 +40,8 @@ add_executable(nibygimp main.cpp
         src/tools/CustomBlurDialog.h
         src/tools/EdgeDetection.cpp
         src/tools/EdgeDetection.h
+        src/tools/HoughTransform.cpp
+        src/tools/HoughTransform.h
         src/tools/Canny.cpp
         src/tools/Canny.h
         src/tools/Binarization.cpp

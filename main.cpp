@@ -11,6 +11,11 @@
 #include <QInputDialog>
 #include <QMessageBox>
 #include <QLabel>
+#include <cmath>
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 #include "src/files/FileManager.h"
 #include "src/image/Image.h"
@@ -21,6 +26,7 @@
 #include "src/tools/Blur.h" // Dodany include dla rozmycia
 #include "src/tools/CustomBlurDialog.h" // Dodany include dla niestandardowego rozmycia
 #include "src/tools/EdgeDetection.h" // Dodany include dla wykrywania krawędzi
+#include "src/tools/HoughTransform.h" // Dodany include dla transformaty Hougha
 #include "src/tools/Binarization.h" // Dodany include dla binaryzacji
 #include "src/tools/Watershed.h" // Dodany include dla segmentacji wododziałowej
 
@@ -389,6 +395,58 @@ int main(int argc, char *argv[]) {
           EdgeDetection::cannyEdgeDetection(image, upperThresh, lowerThresh);
           updateImageView();
           QMessageBox::information(nullptr, "Edge Detection", "Algorytm Canny został zastosowany.");
+        }
+      }
+    } else {
+      QMessageBox::warning(nullptr, "Error", "No image loaded.");
+    }
+  });
+
+  // Akcja transformaty Hougha dla wykrywania linii
+  QAction *houghAction = edgeMenu->addAction("Hough Line Detection");
+  QObject::connect(houghAction, &QAction::triggered, &window, [&image, updateImageView, &window]() {
+    if (image) {
+      bool ok1, ok2;
+      int thetaDensity = QInputDialog::getInt(&window, "Hough Line Detection",
+                                            "Theta density (1 to 5):",
+                                            1, 1, 5, 1, &ok1);
+      if (ok1) {
+        bool skipEdgeDetection = QMessageBox::question(&window, "Hough Line Detection",
+                                                      "Skip edge detection preprocessing?",
+                                                      QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes;
+        
+        auto houghResult = HoughTransform::houghLineDetection(image, thetaDensity, skipEdgeDetection);
+        if (houghResult) {
+          image = std::move(houghResult);
+          updateImageView();
+          QMessageBox::information(nullptr, "Hough Transform", "Transformata Hougha została zastosowana.\nWyświetlono przestrzeń Hougha.");
+        }
+      }
+    } else {
+      QMessageBox::warning(nullptr, "Error", "No image loaded.");
+    }
+  });
+
+  // Akcja rysowania wykrytych linii na oryginalnym obrazie
+  QAction *houghLinesAction = edgeMenu->addAction("Hough Line Drawing");
+  QObject::connect(houghLinesAction, &QAction::triggered, &window, [&image, updateImageView, &window]() {
+    if (image) {
+      bool ok1, ok2;
+      int thetaDensity = QInputDialog::getInt(&window, "Hough Line Drawing",
+                                            "Theta density (1 to 5):",
+                                            1, 1, 5, 1, &ok1);
+      if (ok1) {
+        bool skipEdgeDetection = QMessageBox::question(&window, "Hough Line Drawing",
+                                                      "Skip edge detection preprocessing?",
+                                                      QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes;
+        
+        int threshold = QInputDialog::getInt(&window, "Hough Line Drawing",
+                                           "Line detection threshold (50 to 200):",
+                                           100, 50, 200, 1, &ok2);
+        if (ok2) {
+          HoughTransform::drawDetectedLines(image, thetaDensity, skipEdgeDetection, threshold);
+          updateImageView();
+          QMessageBox::information(nullptr, "Hough Transform", "Wykryte linie zostały narysowane na obrazie.");
         }
       }
     } else {
